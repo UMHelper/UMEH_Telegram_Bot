@@ -30,15 +30,18 @@ def config_update():
 
 messages = []
 
-
+def convert_list_to_string(l):
+    return ','.join(l)
 def send_message(text, chat_id):
     path = API_SERVER + API_TOKEN + '/sendmessage'
     message = {
         'chat_id': chat_id,
         'text': text,
-        'parse_mode' : 'Markdown'
+        'parse_mode': 'Markdown',
     }
-    requests.get(url=path, params=message)
+    print(message)
+    r= requests.get(url=path, params=message)
+    print(r.url)
 
 
 def get_course_info(code):
@@ -59,22 +62,22 @@ def is_text_message(message):
 
 
 def is_code(result):
-    if result['course_info']=='Error Code':
+    if result['course_info'] == 'Error Code':
         return False
     return True
 
 
 def process_message(message):
-    text=''
-    chat_id=message['message']['chat']['id']
+    text = ''
+    chat_id = message['message']['chat']['id']
     if is_text_message(message):
         code = message['message']['text'].upper()
-        result=get_course_info(code)
+        result = get_course_info(code)
         if is_code(result):
-            text="Click here to visit our website👉["+code+"](https://umeh.top/course/"+code+")"
+            text = "Click here to visit our website👉[" + code + "](https://umeh.top/course/" + code + ")"
         else:
-            text="Search Code: "+code+"\nResult : Code doesn't exist"
-        send_message(text,chat_id)
+            text = "Search Code: " + code + "\nResult : Code doesn't exist"
+        send_message(text, chat_id)
 
 
 def process_all_messages():
