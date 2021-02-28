@@ -30,8 +30,7 @@ def config_update():
 
 messages = []
 
-def convert_list_to_string(l):
-    return ','.join(l)
+
 def send_message(text, chat_id):
     path = API_SERVER + API_TOKEN + '/sendmessage'
     message = {
