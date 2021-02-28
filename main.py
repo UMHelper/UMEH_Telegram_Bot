@@ -31,54 +31,62 @@ def config_update():
 messages = []
 
 
-def process_message():
-    '''
-            :var messages List
-                Message list beginning with the latest message of last update
-        '''
-
-    '''
-            Example:
-            [
-                {
-                    'update_id' : 414331188,
-                    'message' : {
-                        'message_id'  4，
-                        ‘from’ : {
-                            'id' : 81632974,
-                            'is_bot' : false
-                            'first_name' : 'Kou',
-                            'last_name' : 'Mei',
-                            'username': 'KouMei',
-                            'language_code' : 'zh-hans
-                        },
-                        'chat' : {
-                            'id' : 81632974,
-                            'is_bot' : false
-                            'first_name' : 'Kou',
-                            'last_name' : 'Mei',
-                            'username': 'KouMei',
-                            'type' : 'private'
-                        },
-                        date : 1614458067,
-                        text : 'text'
-                    }
-                },
-                {},{},{}...
-            ]
-    '''
-    pass
+def send_message(text, chat_id):
+    path = API_SERVER + API_TOKEN + '/sendmessage'
+    message = {
+        'chat_id': chat_id,
+        'text': text
+    }
+    requests.get(url=path, params=message)
 
 
-'''
-    :param offset Integer
-        the newest message id in last update
-'''
+def get_course_info(code):
+    params = {
+        'New_code': code
+    }
+    path = UMEH_SERVER + 'course_info'
+    r = requests.get(url=path, params=params)
+    result = r.json()
+    print(result)
+    return result
 
 
+def is_text_message(message):
+    if 'text' in message['message']:
+        return True
+    return False
+
+
+def is_code(result):
+    if result['course_info']=='Error Code':
+        return False
+    return True
+
+
+def process_message(message):
+    text=''
+    chat_id=message['message']['chat']['id']
+    if is_text_message(message):
+        code = message['message']['text'].upper()
+        result=get_course_info(code)
+        if is_code(result):
+            text='C0de exist'
+        else:
+            text="C0de doesn't exist"
+        send_message(text,chat_id)
+
+
+def process_all_messages():
+    if len(messages) > 1:
+        for i in range(1, len(messages)):
+            process_message(messages[i])
 
 
 def get_updates():
+    '''
+        :param offset Integer
+            the newest message id in last update
+    '''
     path = API_SERVER + API_TOKEN + "/getUpdates?offset=" + str(CONFIG_DIC["MESSAGE_ID"])
     r = requests.get(path)
     '''
