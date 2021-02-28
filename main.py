@@ -55,7 +55,7 @@ def get_course_info(code):
 
 
 def is_text_message(message):
-    if 'text' in message['message']:
+    if ('text' in message['message']) and (len(message['message']['text'])<20):
         return True
     return False
 
