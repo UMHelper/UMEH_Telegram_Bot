@@ -35,7 +35,8 @@ def send_message(text, chat_id):
     path = API_SERVER + API_TOKEN + '/sendmessage'
     message = {
         'chat_id': chat_id,
-        'text': text
+        'text': text,
+        'parse_mode' : 'Markdown'
     }
     requests.get(url=path, params=message)
 
@@ -70,9 +71,9 @@ def process_message(message):
         code = message['message']['text'].upper()
         result=get_course_info(code)
         if is_code(result):
-            text='C0de exist'
+            text="Click here to visit our website👉["+code+"](https://umeh.top/course/"+code+")"
         else:
-            text="C0de doesn't exist"
+            text="Search Code: "+code+"\nResult : Code doesn't exist"
         send_message(text,chat_id)
 
 
@@ -131,7 +132,7 @@ def get_updates():
 
 
 def main():
-    get_updates()
+    pass
 
 
 if __name__ == '__main__':
