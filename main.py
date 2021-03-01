@@ -3,6 +3,12 @@ import os
 import re
 import requests
 import time
+import logging
+
+logging.basicConfig(filename='log',
+                    level=logging.INFO,
+                    format='%(asctime)s %(levelname)-8s %(message)s',
+                    datefmt='%Y-%m-%d %H:%M:%S')
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 API_SERVER = "https://api.telegram.org/bot"
@@ -12,8 +18,11 @@ def load_config():
     try:
         with open(os.path.join(DIR, "config.json")) as config_json:
             config = json.load(config_json)
+            logging.info("Config load successfully, bot start")
+            logging.info('------------------------------------------')
     except FileNotFoundError:
-        print("No Config")
+        logging.error('Config file Error')
+        logging.info('------------------------------------------')
     return config["API_TOKEN"], config["UMEH_SERVER"], config["PORT"], config
 
 
@@ -26,7 +35,8 @@ def config_update():
             json.dump(CONFIG_DIC, config_json)
             config_json.close()
     except FileNotFoundError:
-        print("No Config")
+        logging.error('Config file Error')
+        logging.info('------------------------------------------')
 
 
 messages = []
@@ -39,9 +49,8 @@ def send_message(text, chat_id):
         'text': text,
         'parse_mode': 'Markdown',
     }
-    print(1)
     r = requests.get(url=path, params=message)
-    print(r.url)
+    logging.info('Send Message to ' + str(chat_id) + ' successfully')
 
 
 def get_course_info(code):
@@ -51,6 +60,7 @@ def get_course_info(code):
     path = UMEH_SERVER + 'course_info'
     r = requests.get(url=path, params=params)
     result = r.json()
+    logging.info('Get ' + code + ' info successfully')
     return result
 
 
@@ -74,6 +84,7 @@ def process_message(message):
     text = ''
     if is_text_message(message):
         chat_id = message['message']['chat']['id']
+        logging.info('Process request from ' + message['message']['from']['username'] + ', chat id is ' + str(chat_id))
         code = message['message']['text'].upper()
         if is_course_code(code):
             result = get_course_info(code)
@@ -82,6 +93,7 @@ def process_message(message):
             else:
                 text = "Search Code: " + code + "\nResult : Code doesn't exist"
             send_message(text, chat_id)
+        logging.info('------------------------------------------')
 
 
 def process_all_messages():
