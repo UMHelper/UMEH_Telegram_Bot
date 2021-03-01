@@ -54,7 +54,7 @@ def get_course_info(code):
     return result
 
 
-def is_key_exist(dic, key):
+def is_key_in_dic(dic, key):
     return key in dic
 
 
@@ -63,7 +63,7 @@ def is_course_code(message):
 
 
 def is_text_message(message):
-    return is_key_exist(message, 'message') and is_key_exist(message['message'], 'text') and (len(message['message']['text']) < 20)
+    return is_key_in_dic(message, 'message') and is_key_in_dic(message['message'], 'text') and (len(message['message']['text']) < 20)
 
 
 def is_course_exist(result):
