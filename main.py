@@ -1,6 +1,6 @@
 import json
 import os
-
+import re
 import requests
 
 DIR = os.path.dirname(os.path.abspath(__file__))
@@ -39,7 +39,7 @@ def send_message(text, chat_id):
         'parse_mode': 'Markdown',
     }
     print(message)
-    r= requests.get(url=path, params=message)
+    r = requests.get(url=path, params=message)
     print(r.url)
 
 
@@ -54,16 +54,20 @@ def get_course_info(code):
     return result
 
 
+def is_key_exist(dic, key):
+    return key in dic
+
+
+def is_course_code(message):
+    return re.match(r'\w{4}\d{4}', message['message']['text'])
+
+
 def is_text_message(message):
-    if ('text' in message['message']) and (len(message['message']['text'])<20):
-        return True
-    return False
+    return is_key_exist(message, 'message') and is_key_exist(message['message'], 'text') and (len(message['message']['text']) < 20)
 
 
-def is_code(result):
-    if result['course_info'] == 'Error Code':
-        return False
-    return True
+def is_course_exist(result):
+    return result['course_info'] != 'Error Code'
 
 
 def process_message(message):
@@ -72,7 +76,7 @@ def process_message(message):
     if is_text_message(message):
         code = message['message']['text'].upper()
         result = get_course_info(code)
-        if is_code(result):
+        if is_course_exist(result):
             text = "Click here to visit our website👉[" + code + "](https://umeh.top/course/" + code + ")"
         else:
             text = "Search Code: " + code + "\nResult : Code doesn't exist"
@@ -92,6 +96,7 @@ def get_updates():
     '''
     path = API_SERVER + API_TOKEN + "/getUpdates?offset=" + str(CONFIG_DIC["MESSAGE_ID"])
     r = requests.get(path)
+    print(r.url)
     '''
         :var messages List
             Message list beginning with the latest message of last update
