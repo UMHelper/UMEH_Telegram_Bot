@@ -50,7 +50,6 @@ def get_course_info(code):
     path = UMEH_SERVER + 'course_info'
     r = requests.get(url=path, params=params)
     result = r.json()
-    print(result)
     return result
 
 
@@ -66,21 +65,22 @@ def is_text_message(message):
     return is_key_in_dic(message, 'message') and is_key_in_dic(message['message'], 'text') and (len(message['message']['text']) < 20)
 
 
-def is_course_exist(result):
+def course_exist(result):
     return result['course_info'] != 'Error Code'
 
 
 def process_message(message):
     text = ''
-    chat_id = message['message']['chat']['id']
     if is_text_message(message):
+        chat_id = message['message']['chat']['id']
         code = message['message']['text'].upper()
-        result = get_course_info(code)
-        if is_course_exist(result):
-            text = "Click here to visit our website👉[" + code + "](https://umeh.top/course/" + code + ")"
-        else:
-            text = "Search Code: " + code + "\nResult : Code doesn't exist"
-        send_message(text, chat_id)
+        if is_course_code(code):
+            result = get_course_info(code)
+            if course_exist(result):
+                text = "Click here to visit our website👉[" + code + "](https://umeh.top/course/" + code + ")"
+            else:
+                text = "Search Code: " + code + "\nResult : Code doesn't exist"
+            send_message(text, chat_id)
 
 
 def process_all_messages():
