@@ -2,6 +2,7 @@ import json
 import os
 import re
 import requests
+import time
 
 DIR = os.path.dirname(os.path.abspath(__file__))
 API_SERVER = "https://api.telegram.org/bot"
@@ -38,9 +39,8 @@ def send_message(text, chat_id):
         'text': text,
         'parse_mode': 'Markdown',
     }
-    print(message)
+    print(message['text'])
     r = requests.get(url=path, params=message)
-    print(r.url)
 
 
 def get_course_info(code):
@@ -96,7 +96,6 @@ def get_updates():
     '''
     path = API_SERVER + API_TOKEN + "/getUpdates?offset=" + str(CONFIG_DIC["MESSAGE_ID"])
     r = requests.get(path)
-    print(r.url)
     '''
         :var messages List
             Message list beginning with the latest message of last update
@@ -139,7 +138,10 @@ def get_updates():
 
 
 def main():
-    pass
+    while True:
+        get_updates()
+        process_all_messages()
+        time.sleep(1)
 
 
 if __name__ == '__main__':
