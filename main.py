@@ -39,8 +39,9 @@ def send_message(text, chat_id):
         'text': text,
         'parse_mode': 'Markdown',
     }
-    print(message['text'])
+    print(1)
     r = requests.get(url=path, params=message)
+    print(r.url)
 
 
 def get_course_info(code):
@@ -57,8 +58,8 @@ def is_key_in_dic(dic, key):
     return key in dic
 
 
-def is_course_code(message):
-    return re.match(r'\w{4}\d{4}', message['message']['text'])
+def is_course_code(code):
+    return re.match(r'\w{4}\d{4}', code)
 
 
 def is_text_message(message):
