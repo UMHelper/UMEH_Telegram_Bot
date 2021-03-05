@@ -1,7 +1,7 @@
 import re
-
+import requests
 import telegram
-
+from umehinfo.Course import Course
 
 class UmehBot:
 
@@ -85,10 +85,20 @@ class UmehBot:
         return re.match(r'\w{4}\d{4}', code) or code == 'TEST'
 
     def if_course_exist(self, result: dict) -> bool:
-        pass
+        if result['course_info'] == 'Error Code':
+            return False
+        return True
 
     def get_course_info(self, code: str) -> dict:
-        pass
+        UMEH_SERVER = 'https://mpserver.umeh.top/'
+        params = {
+            'New_code': code,
+        }
+        path = UMEH_SERVER + 'course_info'
+        r = requests.get(url=path, params=params)
+        result = r.json()
+        course=Course(self.if_course_exist(result),result)
+        return course
 
     def send_course_info(self, chat_id: int, text: str, parse_mode: str, reply_markup: telegram.ReplyMarkup):
         return self.send_message(chat_id, text, parse_mode, reply_markup)
