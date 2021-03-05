@@ -15,7 +15,7 @@ class Instructor:
         self.review = []
 
     def get_review(self):
-        UMEH_SERVER = 'https：//mpserver.umeh.top/'
+        UMEH_SERVER = 'https://mpserver.umeh.top/'
         params = {
             'New_code': self.code,
             'prof_name' : self.name
