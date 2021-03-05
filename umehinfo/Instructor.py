@@ -17,10 +17,10 @@ class Instructor:
     def get_review(self):
         UMEH_SERVER = 'https：//mpserver.umeh.top/'
         params = {
-            'New_code': self.code
-
+            'New_code': self.code,
+            'prof_name' : self.name
         }
-        path = UMEH_SERVER + 'course_info'
+        path = UMEH_SERVER + 'comment_info'
         r = requests.get(url=path, params=params)
         result = r.json()
         comments = result['comments']
