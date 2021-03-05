@@ -1,3 +1,5 @@
+import re
+
 import telegram
 
 
@@ -25,7 +27,13 @@ class UmehBot:
                             'last_name': 'Mmi'
                             },
                         'text': 'ACCT1000',
-                        'entities': [],
+                        'entities': [
+                            {
+                                'type': 'bot_command',
+                                'offset': 0,
+                                'length': 6
+                                }
+                            ],
                         'caption_entities': [],
                         'photo': [],
                         'new_chat_members': [],
@@ -48,7 +56,10 @@ class UmehBot:
         self.messages = self.bot.get_updates(offset=self.MESSAGE_ID)
 
     def update_message_id(self):
-        self.MESSAGE_ID = self.messages[len(self.messages) - 1]['update_id']
+        self.set_message_id(self.messages[len(self.messages) - 1]['update_id'])
+
+    def set_message_id(self, message_id):
+        self.MESSAGE_ID = message_id
 
     def get_message_id(self) -> int:
         return self.MESSAGE_ID
@@ -56,14 +67,22 @@ class UmehBot:
     def send_message(self, chat_id: int, text: str, parse_mode: str, reply_markup: telegram.ReplyMarkup):
         return self.bot.send_message(chat_id=chat_id, text=text, parse_mode=parse_mode, reply_markup=reply_markup)
 
+    def is_message(self, message: telegram.Update) -> bool:
+        # return (message.message is not None) or (message.edited_message is not None)
+        return message.message is not None
+
     def is_text_message(self, message: telegram.Update) -> bool:
-        pass
+        return message.message.text is not None
 
     def is_command_message(self, message: telegram.Update) -> bool:
-        pass
+        for entity in message.message.entities:
+            if entity.type == 'bot_command':
+                return True
+        return False
 
     def is_course_code(self, message: telegram.Update) -> bool:
-        pass
+        code=message.message.text.upper()
+        return re.match(r'\w{4}\d{4}', code) or code == 'TEST'
 
     def if_course_exist(self, result: dict) -> bool:
         pass
