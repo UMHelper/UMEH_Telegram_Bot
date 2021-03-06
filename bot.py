@@ -3,6 +3,7 @@ import requests
 import telegram
 from umehinfo.Course import Course
 
+
 class UmehBot:
 
     def __init__(self, token: str, message_id: int):
@@ -81,7 +82,7 @@ class UmehBot:
         return False
 
     def is_course_code(self, message: telegram.Update) -> bool:
-        code=message.message.text.upper()
+        code = message.message.text.upper()
         return re.match(r'\w{4}\d{4}', code) or code == 'TEST'
 
     def if_course_exist(self, result: dict) -> bool:
@@ -97,8 +98,18 @@ class UmehBot:
         path = UMEH_SERVER + 'course_info'
         r = requests.get(url=path, params=params)
         result = r.json()
-        course=Course(self.if_course_exist(result),result)
+        course = Course(self.if_course_exist(result), result)
         return course
 
-    def send_course_info(self, chat_id: int, text: str, parse_mode: str, reply_markup: telegram.ReplyMarkup):
+    def get_course_text(self, course: Course) -> str:
+        pass
+
+    def get_course_reply_markup(self, course: Course) -> telegram.ReplyKeyboardMarkup:
+        pass
+
+    def get_course_keyboard(self, course: Course) -> telegram.KeyboardButton:
+        c = []
+        r = []
+
+    def send_course_info(self, chat_id: int, text: str, parse_mode: str, reply_markup: telegram.ReplyKeyboardMarkup):
         return self.send_message(chat_id, text, parse_mode, reply_markup)
