@@ -1,6 +1,3 @@
-import logging
-
-import requests
 from .Instructor import Instructor
 
 class Course:
