@@ -1,161 +1,119 @@
-import json
 import os
-import re
-import requests
-import time
+from telegram import Update, ReplyKeyboardMarkup, InlineKeyboardMarkup, InlineKeyboardButton
+from telegram.ext import ApplicationBuilder, CommandHandler, ContextTypes, MessageHandler, filters, CallbackQueryHandler
 import logging
+from umeh import fuzzy_search, get_course_info, get_comment_info
+from utils import generate_course_keyboard, check_code, generate_course_info_markdown, generate_course_prof_keyboard, \
+    generate_prof_info_markdown
 
-logging.basicConfig(filename='log',
-                    level=logging.INFO,
-                    format='%(asctime)s %(levelname)-8s %(message)s',
-                    datefmt='%Y-%m-%d %H:%M:%S')
+logging.basicConfig(
+    format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
+    level=logging.INFO
+)
 
-DIR = os.path.dirname(os.path.abspath(__file__))
+DIR = os.getcwd()
+
 API_SERVER = "https://api.telegram.org/bot"
 
-
-def load_config():
-    try:
-        with open(os.path.join(DIR, "config.json")) as config_json:
-            config = json.load(config_json)
-            logging.info("Config load successfully, bot start")
-            logging.info('------------------------------------------')
-    except FileNotFoundError:
-        logging.error('Config file Error')
-        logging.info('------------------------------------------')
-    return config["API_TOKEN"], config["UMEH_SERVER"], config["PORT"], config
+DEV_MODE = True
 
 
-API_TOKEN, UMEH_SERVER, PORT, CONFIG_DIC = load_config()
+async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='Hello, this is What2Reg @UM Bot build by UMHelper Team.',
+    )
 
 
-def config_update():
-    try:
-        with open(os.path.join(DIR, "config.json"), 'w+') as config_json:
-            json.dump(CONFIG_DIC, config_json)
-            config_json.close()
-    except FileNotFoundError:
-        logging.error('Config file Error')
-        logging.info('------------------------------------------')
+async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    text=update.message.text.upper()
+    if check_code(text):
+        course_info= get_course_info(text)
+        print(course_info)
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=generate_course_info_markdown(course_info['course_info']),
+            reply_markup=InlineKeyboardMarkup(generate_course_prof_keyboard(course_info['prof_info'],text)),
+            parse_mode='Markdown'
+        )
+        return
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='Please enter the course code you want to check',
+    )
+
+async def course_prof_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query_data=update.callback_query.data.split('@')
+    course=query_data[0]
+    prof=query_data[1]
+    comment_info=get_comment_info(prof,course)
+
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text=generate_prof_info_markdown(comment_info['prof_info'],course,len(comment_info['comments'])),
+        parse_mode='Markdown',
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton(text='View Comments', callback_data='view_comments@{}@{}'.format(course,prof))]]
+        )
+    )
+
+async def view_comments_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query_data=update.callback_query.data.split('@')
+    course = query_data[1]
+    prof = query_data[2]
+    comment_info = get_comment_info(prof, course)
+    print(comment_info)
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='*{}*-*{}*'.format(course,prof),
+        parse_mode='Markdown'
+    )
+    for comment in comment_info['comments']:
+        if comment['content'] != '':
+            await context.bot.send_message(
+                chat_id=update.effective_chat.id,
+                text=comment['content'],
+                parse_mode='Markdown'
+            )
+async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    code = context.args[0]
+
+    if len(code) < 4:
+        await context.bot.send_message(chat_id=update.effective_chat.id, text='Too short 太短了！！！')
+        return
+
+    res = fuzzy_search(code, 'course')
+    print(res)
+    keyboard=generate_course_keyboard(res['course_info'])
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='Please select the course you want to check',
+        reply_markup=ReplyKeyboardMarkup(
+            keyboard=keyboard,
+            resize_keyboard=True,
+            one_time_keyboard=True
+        )
+    )
 
 
-messages = []
+def main(token):
+    bot = ApplicationBuilder().token(token).build()
 
+    start_handler = CommandHandler('start', start)
+    search_handler = CommandHandler('search', search)
+    message_handler = MessageHandler(filters.TEXT & (~filters.COMMAND), message)
+    course_prof_query_handler = CallbackQueryHandler(course_prof_query, pattern=r'[A-Z]{4}[0-9]{4}@.*')
+    view_comments_query_handler = CallbackQueryHandler(view_comments_query, pattern=r'view_comments@[A-Z]{4}[0-9]{4}@.*')
+    bot.add_handler(start_handler)
+    bot.add_handler(message_handler)
+    bot.add_handler(search_handler)
+    bot.add_handler(course_prof_query_handler)
+    bot.add_handler(view_comments_query_handler)
 
-def send_message(text, chat_id):
-    path = API_SERVER + API_TOKEN + '/sendmessage'
-    message = {
-        'chat_id': chat_id,
-        'text': text,
-        'parse_mode': 'Markdown',
-    }
-    r = requests.get(url=path, params=message)
-    logging.info('Send Message to ' + str(chat_id) + ' successfully')
-
-
-def get_course_info(code):
-    params = {
-        'New_code': code
-    }
-    path = UMEH_SERVER + 'course_info'
-    r = requests.get(url=path, params=params)
-    result = r.json()
-    logging.info('Get ' + code + ' info successfully')
-    return result
-
-
-def is_key_in_dic(dic, key):
-    return key in dic
-
-
-def is_course_code(code):
-    return re.match(r'\w{4}\d{4}', code)
-
-
-def is_text_message(message):
-    return is_key_in_dic(message, 'message') and is_key_in_dic(message['message'], 'text') and (len(message['message']['text']) < 20)
-
-
-def course_exist(result):
-    return result['course_info'] != 'Error Code'
-
-
-def process_message(message):
-    text = ''
-    if is_text_message(message):
-        chat_id = message['message']['chat']['id']
-        logging.info('Process request from ' + message['message']['from']['username'] + ', chat id is ' + str(chat_id))
-        code = message['message']['text'].upper()
-        if is_course_code(code):
-            result = get_course_info(code)
-            if course_exist(result):
-                text = "Click here to visit our website👉[" + code + "](https://umeh.top/course/" + code + ")"
-            else:
-                text = "Search Code: " + code + "\nResult : Code doesn't exist"
-            send_message(text, chat_id)
-        logging.info('------------------------------------------')
-
-
-def process_all_messages():
-    if len(messages) > 1:
-        for i in range(1, len(messages)):
-            process_message(messages[i])
-
-
-def get_updates():
-    '''
-        :param offset Integer
-            the newest message id in last update
-    '''
-    path = API_SERVER + API_TOKEN + "/getUpdates?offset=" + str(CONFIG_DIC["MESSAGE_ID"])
-    r = requests.get(path)
-    '''
-        :var messages List
-            Message list beginning with the latest message of last update
-    '''
-
-    '''
-            Example:
-            [
-                {
-                    'update_id' : 414331188,
-                    'message' : {
-                        'message_id'  4，
-                        ‘from’ : {
-                            'id' : 81632974,
-                            'is_bot' : false
-                            'first_name' : 'Kou',
-                            'last_name' : 'Mei',
-                            'username': 'KouMei',
-                            'language_code' : 'zh-hans
-                        },
-                        'chat' : {
-                            'id' : 81632974,
-                            'is_bot' : false
-                            'first_name' : 'Kou',
-                            'last_name' : 'Mei',
-                            'username': 'KouMei',
-                            'type' : 'private'
-                        },
-                        date : 1614458067,
-                        text : 'text'
-                    }
-                },
-                {},{},{}...
-            ]
-    '''
-    global messages
-    messages = r.json()["result"]
-    CONFIG_DIC["MESSAGE_ID"] = messages[len(messages) - 1]['update_id']
-    config_update()
-
-
-def main():
-    while True:
-        get_updates()
-        process_all_messages()
-        time.sleep(1)
+    bot.run_polling()
 
 
 if __name__ == '__main__':
-    main()
+    os.environ['UMEH_TG_BOT_TOKEN'] = ''
+    main(os.environ['UMEH_TG_BOT_TOKEN'])
