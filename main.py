@@ -5,7 +5,7 @@ import logging
 from umeh import fuzzy_search, get_course_info, get_comment_info
 from utils import generate_course_keyboard, check_code, generate_course_info_markdown, generate_course_prof_keyboard, \
     generate_prof_info_markdown, generate_prof_keyboard, generate_prof_markdown, generate_course_keybord_of_prof_info
-
+from chatbot.ChatBot import ask
 logging.basicConfig(
     format='%(asctime)s - %(name)s - %(levelname)s - %(message)s',
     level=logging.INFO
@@ -28,6 +28,22 @@ async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     )
 
 
+'''
+{
+    user_id: xxx,
+}
+'''
+CURRENT_CHAT_WITH = []
+
+'''
+chat_id: {
+    'prof': xxx,
+    'course': xxx,
+}
+'''
+CHAT_DETAIL = {}
+
+
 async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(update.message.text)
     text = update.message.text.upper()
@@ -43,9 +59,21 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         )
         return
 
+    user_id = update.message.from_user.id
+    print(user_id)
+    print(CURRENT_CHAT_WITH)
+    if user_id in CURRENT_CHAT_WITH:
+        res=ask(text,CHAT_DETAIL[update.effective_chat.id]['course'],CHAT_DETAIL[update.effective_chat.id]['prof'])
+        print(res,type(res))
+        await context.bot.send_message(
+            chat_id=update.effective_chat.id,
+            text=res,
+        )
+        return
+
     # check if it is a prof name or course name
     prof_info = fuzzy_search(text, 'prof')['prof_info']
-    course_info=fuzzy_search(text, 'course')['course_info']
+    course_info = fuzzy_search(text, 'course')['course_info']
 
     print(prof_info)
     print(course_info)
@@ -84,12 +112,46 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
             text=ln['CourseProfSelectText'],
-            reply_markup=ReplyKeyboardMarkup(generate_prof_keyboard(prof_info)+generate_course_keyboard(course_info), one_time_keyboard=True)
+            reply_markup=ReplyKeyboardMarkup(generate_prof_keyboard(prof_info) + generate_course_keyboard(course_info),
+                                             one_time_keyboard=True)
         )
         return
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
         text=ln["CourseCodeText"],
+    )
+
+
+async def end_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    user_id = update.callback_query.from_user.id
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='End Chat',
+    )
+    CURRENT_CHAT_WITH.remove(user_id)
+    del CHAT_DETAIL[user_id]
+
+
+async def start_chat(update: Update, context: ContextTypes.DEFAULT_TYPE):
+    query_data = update.callback_query.data.split('@')
+    course = query_data[1]
+    prof = query_data[2]
+    user_id = update.callback_query.from_user.id
+    print(user_id)
+    CHAT_DETAIL[user_id] = {
+        'prof': prof,
+        'course': course,
+    }
+    CURRENT_CHAT_WITH.append(user_id)
+    await context.bot.send_message(
+        chat_id=update.effective_chat.id,
+        text='It is chat mode now, talking about {} in {}'.format(prof, course),
+        reply_markup=InlineKeyboardMarkup(
+            [[InlineKeyboardButton(
+                text='End Chat',
+                callback_data='end_chat@{}@{}'.format(course, prof),
+            )]]
+        )
     )
 
 
@@ -107,7 +169,12 @@ async def course_prof_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
             [[InlineKeyboardButton(
                 text=ln['ViewCommentsText'],
                 callback_data='view_comments@{}@{}'.format(course, prof),
-            )]]
+            )],
+                [InlineKeyboardButton(
+                    text='Start Chat with GPT about this course',
+                    callback_data='start_chat@{}@{}'.format(course, prof),
+                )]
+            ]
         )
     )
 
@@ -227,17 +294,23 @@ def main(token):
                                                        pattern=r'view_comments@[A-Z]{4}[0-9]{4}@.*')
     show_more_comment_handler = CallbackQueryHandler(show_more_comment,
                                                      pattern=r'show_more_comments@[A-Z]{4}[0-9]{4}@.*@.*')
+    start_chat_handler = CallbackQueryHandler(start_chat, pattern=r'start_chat@[A-Z]{4}[0-9]{4}@.*')
+    end_chat_handler = CallbackQueryHandler(end_chat, pattern=r'end_chat@.*')
     bot.add_handler(start_handler)
     bot.add_handler(message_handler)
     bot.add_handler(search_handler)
     bot.add_handler(course_prof_query_handler)
     bot.add_handler(view_comments_query_handler)
     bot.add_handler(show_more_comment_handler)
-
-    bot.run_polling()
+    bot.add_handler(start_chat_handler)
+    bot.add_handler(end_chat_handler)
+    if DEV_MODE:
+        bot.run_polling()
+    else:
+        bot.run_webhook()
 
 
 if __name__ == '__main__':
-    os.environ['UMEH_TG_BOT_TOKEN'] = 'YOUR TOKEN HERE'
-
+    os.environ['UMEH_TG_BOT_TOKEN'] = ''
+    os.environ['OPENAI_API_KEY']='sk-'
     main(os.environ['UMEH_TG_BOT_TOKEN'])

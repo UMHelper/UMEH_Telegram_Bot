@@ -128,8 +128,9 @@ dmypy.json
 # Pyre type checker
 .pyre/
 
+# comment data from What2REG @UM
+/chatbot/comment
+/chatbot/index
+/comment
+/index
 
-
-config.json
-test.py
-log
