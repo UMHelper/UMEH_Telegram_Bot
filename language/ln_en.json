@@ -1,0 +1,13 @@
+{
+    "GreetingText": "Hello, this is What2Reg @UM Bot build by UMHelper Team.", 
+    "NotFoundText": "No course or professor found", 
+    "CourseProfSelectText": "Please select the course or prof you want to check",
+    "CourseCodeText": "Please enter the course code you want to check", 
+    "ViewCommentsText": "View Comments", 
+    "ShowMoreCommentsText": "Show More Comments", 
+    "NoCommentsText": "No comments found", 
+    "TooManyCommentsText": "Too many comments, only the first 10 comments are shown", 
+    "ShowMoreCommentsBtnText": "Click button to show more comments", 
+    "CourseSelectText": "Please select the course you want to check",
+    "ProfSelectText":"Please select the professor you want to check"
+}
