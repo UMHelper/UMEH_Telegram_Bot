@@ -15,7 +15,6 @@ def fuzzy_search(text, type):
         'type': type
     }
     req = requests.get("{}/fuzzy_search".format(UMEH_SERVER), params=params)
-    print(req.json())
     return req.json()
 
 def get_comment_info(prof,code):
@@ -27,4 +26,6 @@ def get_comment_info(prof,code):
     return req.json()
 
 if __name__ == '__main__':
-    fuzzy_search('TEST', 'course')
+    res=fuzzy_search('acc', 'course')
+    for i in res['course_info']:
+        print(i['New_code'])

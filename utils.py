@@ -15,6 +15,19 @@ def generate_course_keyboard(courses):
     return keyboard
 
 
+def generate_prof_keyboard(profs):
+    keyboard = []
+    num_in_row = 3
+    row = []
+    for i in range(len(profs)):
+        if i % num_in_row == 0:
+            keyboard.append(row)
+            row = []
+        row.append(profs[i]['name'])
+    keyboard.append(row)
+    return keyboard
+
+
 def generate_course_prof_keyboard(profs, code):
     keyboard = []
     num_in_row = 3
@@ -24,6 +37,32 @@ def generate_course_prof_keyboard(profs, code):
             keyboard.append(row)
             row = []
         row.append(InlineKeyboardButton(text=profs[i]['name'], callback_data='{}@{}'.format(code, profs[i]['name'])))
+    keyboard.append(row)
+    return keyboard
+
+
+def generate_prof_markdown(prof):
+    markdown = ''
+    markdown += '*{}*\n'.format(prof['name'])
+    markdown += '----------------------------\n'
+
+    return markdown
+
+
+def generate_course_keybord_of_prof_info(courses):
+    keyboard = []
+    num_in_row = 3
+    row = []
+    print(courses[0])
+    for i in range(len(courses)):
+        print(courses[i]['course_info']['New_code'])
+        print(courses[i]['comment_info']['name'])
+        if i % num_in_row == 0:
+            keyboard.append(row)
+            row = []
+        row.append(InlineKeyboardButton(
+            text=courses[i]['course_info']['New_code'],
+            callback_data='{}@{}'.format(courses[i]['course_info']['New_code'], courses[i]['comment_info']['name'])))
     keyboard.append(row)
     return keyboard
 
@@ -54,12 +93,15 @@ def generate_prof_info_markdown(prof_info, code, comment_num):
     markdown += '{} Comments'.format(comment_num)
 
     return markdown
+
+
 def generate_comment_markdown(comment):
     markdown = ''
     markdown += '*{}*\n'.format(comment['content'])
     markdown += '----------------------------\n'
 
     return markdown
+
 
 def check_code(code):
     """
