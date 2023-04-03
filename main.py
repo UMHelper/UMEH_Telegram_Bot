@@ -311,6 +311,6 @@ def main(token):
 
 
 if __name__ == '__main__':
-    os.environ['UMEH_TG_BOT_TOKEN'] = ':-'
-    os.environ['OPENAI_API_KEY']='sk-'
+    # os.environ['UMEH_TG_BOT_TOKEN'] = ':-'
+    # os.environ['OPENAI_API_KEY']='sk-'
     main(os.environ['UMEH_TG_BOT_TOKEN'])
