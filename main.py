@@ -17,11 +17,14 @@ API_SERVER = "https://api.telegram.org/bot"
 
 DEV_MODE = True
 
+import json
+with open('language/ln_en.json', 'r') as f:
+    ln = json.load(f)
 
 async def start(update: Update, context: ContextTypes.DEFAULT_TYPE):
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text='Hello, this is What2Reg @UM Bot build by UMHelper Team.',
+        text=ln['GreetingText'],
     )
 
 
@@ -49,14 +52,14 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(prof_info) == 0 and len(course_info) == 0:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text='No course or professor found',
+            text=ln['NotFoundText'],
         )
         return
 
     if len(prof_info) == 0 and len(course_info) != 0:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text='Please select the course you want to check',
+            text=ln['CourseProfSelectText'],
             reply_markup=ReplyKeyboardMarkup(generate_course_keyboard(course_info), one_time_keyboard=True)
         )
         return
@@ -65,7 +68,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
         if len(prof_info) > 1:
             await context.bot.send_message(
                 chat_id=update.effective_chat.id,
-                text='Please select the professor you want to check',
+                text=ln['ProfSelectText'],
                 reply_markup=ReplyKeyboardMarkup(generate_prof_keyboard(prof_info), one_time_keyboard=True)
             )
             return
@@ -80,13 +83,13 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     if len(prof_info) != 0 and len(course_info) != 0:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text='Please select the course or prof you want to check',
+            text=ln['CourseProfSelectText'],
             reply_markup=ReplyKeyboardMarkup(generate_prof_keyboard(prof_info)+generate_course_keyboard(course_info), one_time_keyboard=True)
         )
         return
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text='Please enter the course code you want to check',
+        text=ln["CourseCodeText"],
     )
 
 
@@ -102,7 +105,7 @@ async def course_prof_query(update: Update, context: ContextTypes.DEFAULT_TYPE):
         parse_mode='Markdown',
         reply_markup=InlineKeyboardMarkup(
             [[InlineKeyboardButton(
-                text='View Comments',
+                text=ln['ViewCommentsText'],
                 callback_data='view_comments@{}@{}'.format(course, prof),
             )]]
         )
@@ -125,7 +128,7 @@ async def show_more_comment(update: Update, context: ContextTypes.DEFAULT_TYPE):
                 )
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="Click button to show more comments",
+            text=ln['ShowMoreCommentsBtnText'],
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton(
                     text='Show More Comments',
@@ -174,10 +177,10 @@ async def view_comments_query(update: Update, context: ContextTypes.DEFAULT_TYPE
                 )
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
-            text="Click button to show more comments",
+            text=ln['ShowMoreCommentsBtnText'],
             reply_markup=InlineKeyboardMarkup(
                 [[InlineKeyboardButton(
-                    text='Show More Comments',
+                    text=ln['ShowMoreCommentsText'],
                     callback_data='show_more_comments@{}@{}@{}'.format(course, prof, 10),
                 )]]
             )
@@ -204,7 +207,7 @@ async def search(update: Update, context: ContextTypes.DEFAULT_TYPE):
     keyboard = generate_course_keyboard(res['course_info'])
     await context.bot.send_message(
         chat_id=update.effective_chat.id,
-        text='Please select the course you want to check',
+        text=ln["CourseSelectText"],
         reply_markup=ReplyKeyboardMarkup(
             keyboard=keyboard,
             resize_keyboard=True,
@@ -236,4 +239,5 @@ def main(token):
 
 if __name__ == '__main__':
     os.environ['UMEH_TG_BOT_TOKEN'] = 'YOUR TOKEN HERE'
+
     main(os.environ['UMEH_TG_BOT_TOKEN'])
