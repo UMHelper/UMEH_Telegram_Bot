@@ -63,7 +63,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(user_id)
     print(CURRENT_CHAT_WITH)
     if user_id in CURRENT_CHAT_WITH:
-        res=ask(text,CHAT_DETAIL[update.effective_chat.id]['course'],CHAT_DETAIL[update.effective_chat.id]['prof'])
+        res=await ask(text,CHAT_DETAIL[update.effective_chat.id]['course'],CHAT_DETAIL[update.effective_chat.id]['prof'])
         print(res,type(res))
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -311,6 +311,6 @@ def main(token):
 
 
 if __name__ == '__main__':
-    os.environ['UMEH_TG_BOT_TOKEN'] = ''
+    os.environ['UMEH_TG_BOT_TOKEN'] = ':-'
     os.environ['OPENAI_API_KEY']='sk-'
     main(os.environ['UMEH_TG_BOT_TOKEN'])

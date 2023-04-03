@@ -3,12 +3,10 @@ from langchain import OpenAI
 import os, requests
 
 from chatbot.utils import get_comment_path,get_index_path
-
 os.environ['OPENAI_API_KEY']='sk-'
-
 def download_comment(course_code, prof_name):
     path = get_comment_path(course_code, prof_name)
-    if os.path.exists(path):
+    if len(os.listdir(path)) > 0:
         return
     url = 'https://mpserver.umeh.top/all_comment_info/?New_code={}&prof_name={}'.format(course_code, prof_name)
     comments = requests.get(url).json()['comments']
@@ -65,14 +63,16 @@ def get_index(course_code, prof_name):
     return index
 
 
-def ask(question, course_code, prof_name):
+async def ask(question, course_code, prof_name):
     print(question,course_code, prof_name)
     download_comment(course_code, prof_name)
     construct_index(course_code, prof_name)
 
     index = get_index(course_code, prof_name)
-    return index.query(question).response
-
+    res= index.query(question,use_async=True)
+    res=res.response
+    print(res)
+    return res
 
 if __name__ == '__main__':
     download_comment('TEST', 'TEST')
