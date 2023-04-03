@@ -3,7 +3,6 @@ from langchain import OpenAI
 import os, requests
 
 from chatbot.utils import get_comment_path,get_index_path
-os.environ['OPENAI_API_KEY']='sk-'
 def download_comment(course_code, prof_name):
     path = get_comment_path(course_code, prof_name)
     if len(os.listdir(path)) > 0:
