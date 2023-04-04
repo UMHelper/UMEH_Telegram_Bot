@@ -74,11 +74,14 @@ def ask(question, course_code, prof_name):
             "Here is some comment from student about the teacher in this course:\n"
             "{context_str}"
             "\n---------------------\n"
-            "Given this information, please answer the question: give me a brief summary about this course based on the "
-            "course description and {query_str}\n "
+            "Given this information, please answer the question:{query_str}\n "
+            "Give me a summary about course description if necessary\n"
             "---------------------\n"
-            "Your answer should be in same language with the question, i.e. English to English or Chinese to Chinese.\n"
-            "你回答所使用的语言必须与问题所使用的语言一致，例如问题是中文，那么回答也必须是中文。\n"
+            "You can not use same content in the context to answer the question.\n"
+            "What you should do is to use the context to generate a new answer.\n"
+            "Your answer should be in same language with the question\n"
+            "重点：！！！如果我的问题中包含中文，请使用中文来回答\n"
+            "If I use English to ask a question, you should use English to answer the question\n"
     )
     QA_PROMPT = QuestionAnswerPrompt(QA_PROMPT_TMPL)
 
