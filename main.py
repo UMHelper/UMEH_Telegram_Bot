@@ -63,7 +63,7 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     print(user_id)
     print(CURRENT_CHAT_WITH)
     if user_id in CURRENT_CHAT_WITH:
-        res=await ask(text,CHAT_DETAIL[update.effective_chat.id]['course'],CHAT_DETAIL[update.effective_chat.id]['prof'])
+        res=ask(text,CHAT_DETAIL[update.effective_chat.id]['course'],CHAT_DETAIL[update.effective_chat.id]['prof'])
         print(res,type(res))
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -75,8 +75,6 @@ async def message(update: Update, context: ContextTypes.DEFAULT_TYPE):
     prof_info = fuzzy_search(text, 'prof')['prof_info']
     course_info = fuzzy_search(text, 'course')['course_info']
 
-    print(prof_info)
-    print(course_info)
     if len(prof_info) == 0 and len(course_info) == 0:
         await context.bot.send_message(
             chat_id=update.effective_chat.id,
@@ -311,6 +309,4 @@ def main(token):
 
 
 if __name__ == '__main__':
-    # os.environ['UMEH_TG_BOT_TOKEN'] = ':-'
-    # os.environ['OPENAI_API_KEY']='sk-'
     main(os.environ['UMEH_TG_BOT_TOKEN'])
